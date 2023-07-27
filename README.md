@@ -11,3 +11,6 @@
 但是这样的方法存在一些问题，比如，这个交集有可能是空集，并且这个过程不够智能。
 
 ## 计划改进的方法
+
+计划改进的方法依然需要训练自定的模型（例如逻辑回归模型）进行预测，并且使用训练好的模型的预测结果计算得出存在偏见的属性，这个过程需要模仿[Mitigating Calibration Bias Without Fixed Attribute Grouping for Improved Fairness in Medical Imaging Analysis](https://arxiv.org/pdf/2307.01738.pdf)中两阶段训练方法的第一个阶段
+
