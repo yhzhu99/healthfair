@@ -1,15 +1,8 @@
-from aif360.datasets import AdultDataset
-
-# 1. 加载数据集并分割为训练集和验证集
-dataset = AdultDataset()
-(dataset_orig_train, dataset_orig_val) = dataset.split([0.7], shuffle=True)
-
-# 准备训练集的特征 (X) 和目标 (y)
-X_train = dataset_orig_train.features
-y_train = dataset_orig_train.labels.ravel()
 import torch
 from torch import nn
 from torch.optim import Adam
+from sklearn.preprocessing import MinMaxScaler
+from aif360.datasets import AdultDataset
 
 
 class VAE(nn.Module):
@@ -47,18 +40,55 @@ def loss_function(recon_x, x, mu, logvar):
     return BCE + KLD
 
 
-# Convert data to PyTorch tensors
-X_train_tensor = torch.from_numpy(X_train).float()
+# 检查是否有可用的GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Load and split the dataset
+dataset = AdultDataset()
+(dataset_orig_train, dataset_orig_val) = dataset.split([0.7], shuffle=True)
 
+# Prepare the features (X) and target (y) from the training set
+X_train = dataset_orig_train.features
+
+# Create a scaler object and fit it to the training data
+scaler = MinMaxScaler()
+scaler.fit(X_train)
+
+# Normalize the training data
+X_train_scaled = scaler.transform(X_train)
+
+# Convert data to PyTorch tensors
+X_train_tensor = torch.from_numpy(X_train_scaled).float().to(device)
+print(X_train.shape[1])
 # Initialize the model and optimizer
-model = VAE(input_dim=X_train.shape[1], latent_dim=2, hidden_dim=256)
-optimizer = Adam(model.parameters())
+model = VAE(input_dim=X_train.shape[1], latent_dim=10, hidden_dim=1024).to(device)
+optimizer = Adam(model.parameters(), lr=0.01)
 
 # Training loop
-for epoch in range(50):
+for epoch in range(2000):
     optimizer.zero_grad()
     recon_batch, mu, logvar = model(X_train_tensor)
     loss = loss_function(recon_batch, X_train_tensor, mu, logvar)
     loss.backward()
     optimizer.step()
     print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss.item()))
+import matplotlib.pyplot as plt
+
+# 将模型设置为评估模式
+model.eval()
+
+# 通过编码器部分传递输入数据
+mu, logvar = model.encode(X_train_tensor)
+
+# 计算潜在变量
+z = model.reparameterize(mu, logvar)
+
+# 将潜在变量转换为numpy数组
+z = z.detach().cpu().numpy()
+
+# 绘制潜在变量的散点图
+plt.figure(figsize=(8, 6))
+plt.scatter(z[:, 0], z[:, 1], s=1)
+plt.xlabel('Dimension 1')
+plt.ylabel('Dimension 2')
+plt.title('Latent space')
+plt.show()
