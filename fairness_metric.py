@@ -1,6 +1,4 @@
 import numpy as np
-import random
-
 
 def calculate_di(y_pred, y_true, sensitive_dict, privileged_conditions):
     # 创建一个字典来存储每个敏感属性的DI值
@@ -117,36 +115,6 @@ def calculate_spd(y_pred, y_true, sensitive_dict, privileged_conditions):
     return spd_dict
 
 
-# def calculate_theil_index(y_pred, y_true,sensitive_dict, privileged_conditions):
-#     # 创建一个字典来存储每个敏感属性的Theil指数
-#     theil_index_dict = {}
-#
-#     # 计算预测值的总平均值
-#     y_pred_mean = np.mean(y_pred)
-#
-#     # 对于每个敏感属性
-#     for attr, condition in privileged_conditions.items():
-#         # 提取这个敏感属性的值
-#         sensitive_values = np.array(sensitive_dict[attr])
-#
-#         # 确定哪些样本属于特权群体和非特权群体
-#         condition_array = np.array([condition(val) for val in sensitive_values])
-#         privileged_indices = np.where(condition_array)[0]
-#         unprivileged_indices = np.where(~condition_array)[0]
-#
-#         # 提取特权群体和非特权群体的预测结果
-#         y_pred_privileged = y_pred[privileged_indices]
-#         y_pred_unprivileged = y_pred[unprivileged_indices]
-#
-#         # 计算特权群体和非特权群体的Theil指数
-#         theil_index_privileged = np.mean((y_pred_privileged / y_pred_mean) * np.log(y_pred_privileged / y_pred_mean))
-#         theil_index_unprivileged = np.mean((y_pred_unprivileged / y_pred_mean) * np.log(y_pred_unprivileged / y_pred_mean))
-#
-#         # 计算并存储这个敏感属性的Theil指数，对特权和非特权组加权求和
-#         theil_index_dict[attr] = (len(y_pred_privileged) * theil_index_privileged + len(y_pred_unprivileged) * theil_index_unprivileged) / len(y_pred)
-#
-#     return theil_index_dict
-
 
 def calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, threshold):
     y_true = np.array(y_true)
@@ -157,19 +125,7 @@ def calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, thresh
     performance_dict['aod'] = calculate_aod(y_pred_class, y_true, sensitive_dict, privileged_conditions)
     performance_dict['eod'] = calculate_eod(y_pred_class, y_true, sensitive_dict, privileged_conditions)
     performance_dict['spd'] = calculate_spd(y_pred_class, y_true, sensitive_dict, privileged_conditions)
-    # performance_dict['theil_index'] = calculate_theil_index(y_pred_class, y_true, sensitive_dict, privileged_conditions)
 
     return performance_dict
 
-# # 使用上面的函数
-# y_pred = np.array([0.1, 0.6, 0.7, 0.3])  # 这应该是您的模型预测结果
-# y_true = np.array([0, 1, 1, 0])  # 这应该是实际的标签
-# sensitive_dict = {'gender': [0, 1, 1, 0], 'age': [60, 40, 20, 40]}  # 这是敏感属性字典
-#
-# privileged_conditions = {'gender': lambda x: x == 0, 'age': lambda x: x < 50}  # 这是特权条件字典
-#
-# threshold = 0.5
-#
-# performance_dict = calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, threshold)
-#
-# print(performance_dict)
+
