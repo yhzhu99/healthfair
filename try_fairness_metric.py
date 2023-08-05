@@ -3,10 +3,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from aif360.datasets import AdultDataset
 from aif360.metrics import BinaryLabelDatasetMetric, ClassificationMetric
+from fairness_metric import calculate_bias
 
 # 加载数据集
 dataset = AdultDataset()
-
+print(dataset.protected_attributes[:, 1])
 # 划分数据集
 train, test = dataset.split([0.8], shuffle=True)
 
@@ -33,17 +34,23 @@ privileged_groups = [{'sex': 1}]
 unprivileged_groups = [{'sex': 0}]
 
 # 创建BinaryLabelDatasetMetric实例
-metric = BinaryLabelDatasetMetric(test_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
+metric = BinaryLabelDatasetMetric(test_pred, unprivileged_groups=unprivileged_groups,
+                                  privileged_groups=privileged_groups)
 
 # 计算并打印公平性指标
 print("Disparate Impact (DI):", metric.disparate_impact())
 print("Statistical Parity Difference (SPD):", metric.statistical_parity_difference())
 
 # 创建ClassificationMetric实例
-classification_metric = ClassificationMetric(test, test_pred, unprivileged_groups=unprivileged_groups, privileged_groups=privileged_groups)
+classification_metric = ClassificationMetric(test, test_pred, unprivileged_groups=unprivileged_groups,
+                                             privileged_groups=privileged_groups)
 
 # 计算并打印更多的公平性指标
 print("Equal Opportunity Difference (EOD):", classification_metric.equal_opportunity_difference())
 print("Average Odds Difference (AOD):", classification_metric.average_odds_difference())
 print("Theil Index:", classification_metric.theil_index())
 
+performance_dict = calculate_bias(y_pred, y_test, {'sex': test.protected_attributes[:, 1]},
+                                  {'sex': lambda x: x == 1}, 0.5)
+
+print(performance_dict)

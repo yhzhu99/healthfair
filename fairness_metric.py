@@ -47,10 +47,10 @@ def calculate_aod(y_pred, y_true, sensitive_dict, privileged_conditions):
         y_true_unprivileged = y_true[unprivileged_indices]
 
         # 计算特权群体和非特权群体的真阳性率 (TPR) 和假阳性率 (FPR)
-        TPR_privileged = np.mean((y_pred_privileged == 1) & (y_true_privileged == 1))
-        FPR_privileged = np.mean((y_pred_privileged == 1) & (y_true_privileged == 0))
-        TPR_unprivileged = np.mean((y_pred_unprivileged == 1) & (y_true_unprivileged == 1))
-        FPR_unprivileged = np.mean((y_pred_unprivileged == 1) & (y_true_unprivileged == 0))
+        TPR_privileged = np.sum((y_pred_privileged == 1) & (y_true_privileged == 1)) / np.sum(y_true_privileged == 1)
+        FPR_privileged = np.sum((y_pred_privileged == 1) & (y_true_privileged == 0)) / np.sum(y_true_privileged == 0)
+        TPR_unprivileged = np.sum((y_pred_unprivileged == 1) & (y_true_unprivileged == 1)) / np.sum(y_true_unprivileged == 1)
+        FPR_unprivileged = np.sum((y_pred_unprivileged == 1) & (y_true_unprivileged == 0)) / np.sum(y_true_unprivileged == 0)
 
         # 计算并存储这个敏感属性的AOD值
         aod_dict[attr] = 0.5 * ((FPR_privileged - FPR_unprivileged) + (TPR_privileged - TPR_unprivileged))
@@ -79,8 +79,9 @@ def calculate_eod(y_pred, y_true, sensitive_dict, privileged_conditions):
         y_true_unprivileged = y_true[unprivileged_indices]
 
         # 计算特权群体和非特权群体的真阳性率 (TPR)
-        TPR_privileged = np.mean((y_pred_privileged == 1) & (y_true_privileged == 1))
-        TPR_unprivileged = np.mean((y_pred_unprivileged == 1) & (y_true_unprivileged == 1))
+        TPR_privileged = np.sum((y_pred_privileged == 1) & (y_true_privileged == 1)) / np.sum(y_true_privileged == 1)
+        TPR_unprivileged = np.sum((y_pred_unprivileged == 1) & (y_true_unprivileged == 1)) / np.sum(
+            y_true_unprivileged == 1)
 
         # 计算并存储这个敏感属性的EOD值
         eod_dict[attr] = TPR_privileged - TPR_unprivileged
@@ -88,7 +89,7 @@ def calculate_eod(y_pred, y_true, sensitive_dict, privileged_conditions):
     return eod_dict
 
 
-def calculate_spd(y_pred,y_true, sensitive_dict, privileged_conditions):
+def calculate_spd(y_pred, y_true, sensitive_dict, privileged_conditions):
     # 创建一个字典来存储每个敏感属性的SPD值
     spd_dict = {}
 
@@ -114,7 +115,6 @@ def calculate_spd(y_pred,y_true, sensitive_dict, privileged_conditions):
         spd_dict[attr] = PPR_privileged - PPR_unprivileged
 
     return spd_dict
-
 
 
 # def calculate_theil_index(y_pred, y_true,sensitive_dict, privileged_conditions):
@@ -148,9 +148,7 @@ def calculate_spd(y_pred,y_true, sensitive_dict, privileged_conditions):
 #     return theil_index_dict
 
 
-
 def calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, threshold):
-
     y_true = np.array(y_true)
     y_pred_class = [1 if y >= threshold else 0 for y in y_pred]
     y_pred_class = np.array(y_pred_class)
@@ -163,16 +161,15 @@ def calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, thresh
 
     return performance_dict
 
-
-# 使用上面的函数
-y_pred = np.array([0.1, 0.6, 0.7, 0.3])  # 这应该是您的模型预测结果
-y_true = np.array([0, 1, 1, 0])  # 这应该是实际的标签
-sensitive_dict = {'gender': [0, 1, 1, 0], 'age': [60, 40, 20, 40]}  # 这是敏感属性字典
-
-privileged_conditions = {'gender': lambda x: x == 0, 'age': lambda x: x < 50}  # 这是特权条件字典
-
-threshold = 0.5
-
-performance_dict = calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, threshold)
-
-print(performance_dict)
+# # 使用上面的函数
+# y_pred = np.array([0.1, 0.6, 0.7, 0.3])  # 这应该是您的模型预测结果
+# y_true = np.array([0, 1, 1, 0])  # 这应该是实际的标签
+# sensitive_dict = {'gender': [0, 1, 1, 0], 'age': [60, 40, 20, 40]}  # 这是敏感属性字典
+#
+# privileged_conditions = {'gender': lambda x: x == 0, 'age': lambda x: x < 50}  # 这是特权条件字典
+#
+# threshold = 0.5
+#
+# performance_dict = calculate_bias(y_pred, y_true, sensitive_dict, privileged_conditions, threshold)
+#
+# print(performance_dict)
