@@ -1,25 +1,60 @@
 import pandas as pd
-import numpy as np
 from fairness_metric import calculate_bias
+import os
 
-# 读取 csv 文件
-df = pd.read_csv('test_after_zscore.csv')
+results = []
+def list_files_in_directory(directory_path):
+    with os.scandir(directory_path) as entries:
+        return [entry.path for entry in entries if entry.is_file()]
 
-# 提取 'Outcome', 'Sex', 'Age' 列，并将它们转换为 numpy 数组
-outcome = df['Outcome'].values
-sex = df['Sex'].values
-age = df['Age'].values
 
-# 假设 "outcome" 是你的目标数组
-n_samples = len(outcome)  # 获取样本数量
+def fairness_metric(A, B):
+    y_pred = []
+    y_true = []
+    sex = []
+    age = []
+    indices = []
+    index = 0
+    for count in A['lens']:
+        for _ in range(count):
+            indices.append(index)
+        index += 1
 
-# 生成随机的预测结果
-y_pred = np.random.randint(0, 2, n_samples)  # 生成值为0或1的随机整数
+    for index in range(len(A['preds'])):
+        y_pred.append(A['preds'][index])
+        y_true.append(A['labels'][index][0])
+        sex.append(B[indices[index]][0][0])
+        age.append(B[indices[index]][0][1])
+    return calculate_bias(y_pred, y_true, {'sex': sex, 'age': age},
+                          {'sex': lambda x: x == 1, 'age': lambda x: x <= 0}, 0.5)
 
-# 现在 outcome, sex, age 是 numpy 数组，包含了对应列的值
-print(outcome)
-print(sex)
-print(age)
-performance_dict = calculate_bias(y_pred, outcome, {'sex': sex, 'age': age},
-                                  {'sex': lambda x: x == 1, 'age': lambda x: x <= 0}, 0.5)
-print(performance_dict)
+
+
+for fold_index in range(10):
+    a_file_path = './logs/analysis/cdsl-outcome-GRU-fold' + str(fold_index) + '-seed0.pkl'
+    b_file_path = 'cdsl/processed/fold_' + str(fold_index) + '/test_x.pkl'
+    A = pd.read_pickle(a_file_path)
+    B = pd.read_pickle(b_file_path)
+    fairness_performance = fairness_metric(A, B)
+    result = {
+        'Fold': fold_index,
+        'DI_Sex': abs(fairness_performance['di']['sex']),
+        'AOD_Sex': abs(fairness_performance['aod']['sex']),
+        'EOD_Sex': abs(fairness_performance['eod']['sex']),
+        'SPD_Sex': abs(fairness_performance['spd']['sex']),
+        'DI_Age': abs(fairness_performance['di']['age']),
+        'AOD_Age': abs(fairness_performance['aod']['age']),
+        'EOD_Age': abs(fairness_performance['eod']['age']),
+        'SPD_Age': abs(fairness_performance['spd']['age'])
+    }
+
+    results.append(result)
+
+# 将结果转换为DataFrame
+df = pd.DataFrame(results)
+
+# 设置Fold为index
+df.set_index('Fold', inplace=True)
+
+# 导出到Excel
+df.to_excel("cdsl_fairness_results.xlsx")

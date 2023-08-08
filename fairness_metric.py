@@ -19,7 +19,10 @@ def calculate_di(y_pred, y_true, sensitive_dict, privileged_conditions):
         unprivileged_positive_rate = np.mean(y_pred[unprivileged_indices] == 1)
 
         # 计算并存储这个敏感属性的DI值
-        di_dict[attr] = unprivileged_positive_rate / privileged_positive_rate
+        if unprivileged_positive_rate / privileged_positive_rate<1:
+            di_dict[attr] = unprivileged_positive_rate / privileged_positive_rate
+        else:
+            di_dict[attr] = privileged_positive_rate / unprivileged_positive_rate
 
     return di_dict
 
