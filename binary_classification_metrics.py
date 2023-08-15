@@ -21,8 +21,6 @@ def get_binary_metrics(preds, labels, y_true_los=None, threshold=None):
     auroc = AUROC(task="binary")
     auprc = AveragePrecision(task="binary")
     f1 = BinaryF1Score()
-    if threshold is not None:
-        es = es_score(labels, y_true_los, preds, threshold)
 
     # convert labels type to int
     labels = labels.type(torch.int)
@@ -43,6 +41,7 @@ def get_binary_metrics(preds, labels, y_true_los=None, threshold=None):
             "minpse": minpse_score,
         }
     else:
+        es = es_score(labels, y_true_los, preds, threshold)
         return {
             "accuracy": accuracy.compute().item(),
             "auroc": auroc.compute().item(),
