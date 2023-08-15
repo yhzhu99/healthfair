@@ -34,6 +34,7 @@ for fold_index in range(10):
     a_file_path = './logs/analysis/cdsl-outcome-GRU-fold' + str(fold_index) + '-seed0.pkl'
     b_file_path = 'cdsl/processed/fold_' + str(fold_index) + '/test_x.pkl'
     A = pd.read_pickle(a_file_path)
+    print(A)
     B = pd.read_pickle(b_file_path)
     fairness_performance = fairness_metric(A, B)
     result = {
@@ -50,11 +51,11 @@ for fold_index in range(10):
 
     results.append(result)
 
-# 将结果转换为DataFrame
-df = pd.DataFrame(results)
-
-# 设置Fold为index
-df.set_index('Fold', inplace=True)
-
-# 导出到Excel
-df.to_excel("cdsl_fairness_results.xlsx")
+# # 将结果转换为DataFrame
+# df = pd.DataFrame(results)
+#
+# # 设置Fold为index
+# df.set_index('Fold', inplace=True)
+#
+# # 导出到Excel
+# df.to_excel("cdsl_fairness_results.xlsx")

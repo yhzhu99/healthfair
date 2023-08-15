@@ -66,14 +66,18 @@ auprc = []
 f1 = []
 minpse = []
 # 创建一个空的DataFrame来存储指标
-results_df = pd.DataFrame(columns=['Fold', 'Accuracy', 'AUROC', 'AUPRC', 'F1', 'MinPSE'])
+results_df = pd.DataFrame(columns=['Fold', 'Accuracy', 'AUROC', 'AUPRC', 'F1', 'MinPSE', 'ES'])
 
 for fold_index in range(10):
     y_pred = []
     y_true = []
-    feature_file_path = 'cdsl_before_zscore/processed/fold_' + str(fold_index) + '/val_x.pkl'
+    y_los_true = []
+    los_info_path = 'tjh_before_zscore/processed/fold_' + str(fold_index) + '/los_info.pkl'
+    los_info = pd.read_pickle(los_info_path)
+    threshold = los_info['threshold']
+    feature_file_path = 'tjh_before_zscore/processed/fold_' + str(fold_index) + '/test_x.pkl'
     patients_features = pd.read_pickle(feature_file_path)
-    outcome_file_path = 'cdsl_before_zscore/processed/fold_' + str(fold_index) + '/val_y.pkl'
+    outcome_file_path = 'tjh_before_zscore/processed/fold_' + str(fold_index) + '/test_y.pkl'
     patients_outcomes = pd.read_pickle(outcome_file_path)
     c_score = []
     for patient_features, patient_outcomes in zip(patients_features, patients_outcomes):
@@ -89,26 +93,24 @@ for fold_index in range(10):
             patient_scores.append([total_points, mortality[total_points], sex, age, urea, crp])
             y_pred.append(mortality[total_points])
             y_true.append(patient_outcome[0])
+            y_los_true.append(patient_outcome[1])
+
         c_score.append(patient_scores)
-    print(c_score)
-    metrics = get_binary_metrics(preds=torch.tensor(y_pred, dtype=torch.float32), labels=torch.tensor(y_true))
+
+    # [:1]
+    # los_info
+    metrics = get_binary_metrics(preds=torch.tensor(y_pred, dtype=torch.float32), labels=torch.tensor(y_true),
+                                 y_true_los=torch.tensor(y_los_true, dtype=torch.float32), threshold=threshold)
     # Add each fold's metrics to the DataFrame
     results_df.loc[fold_index] = [fold_index,
                                   metrics.get('accuracy', 0),
                                   metrics.get('auroc', 0),
                                   metrics.get('auprc', 0),
                                   metrics.get('f1', 0),
-                                  metrics.get('minpse', 0)]
-
-# Calculate mean and standard deviation
-mean_series = results_df.mean()
-std_series = results_df.std()
-
-# Add mean and standard deviation to the DataFrame
-results_df.loc['Mean'] =mean_series.tolist()
-results_df.loc['Std'] =std_series.tolist()
+                                  metrics.get('minpse', 0),
+                                  metrics.get('es', 0)]
 
 # Save results to Excel file
-results_df.to_excel('cdsl_classification_metrics.xlsx', index=False)
+results_df.to_excel('tjh_classification_metrics.xlsx', index=False)
 
 print("Results exported to Excel.")
