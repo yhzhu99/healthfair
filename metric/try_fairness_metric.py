@@ -1,13 +1,13 @@
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from aif360.datasets import AdultDataset
+from aif360.datasets import AdultDataset ,GermanDataset,CompasDataset
 from aif360.metrics import BinaryLabelDatasetMetric, ClassificationMetric
 from fairness_metric import calculate_bias
 
 # 加载数据集
-dataset = AdultDataset()
-print(dataset.protected_attributes[:, 1])
+dataset = CompasDataset(favorable_classes=[0])
+
 # 划分数据集
 train, test = dataset.split([0.8], shuffle=True)
 
@@ -24,7 +24,7 @@ y_test = test.labels.ravel()
 # 拟合模型并做出预测
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
-
+print(test.labels)
 # 创建测试集的副本，并将预测标签添加到副本中
 test_pred = test.copy()
 test_pred.labels = y_pred
@@ -50,7 +50,7 @@ print("Equal Opportunity Difference (EOD):", classification_metric.equal_opportu
 print("Average Odds Difference (AOD):", classification_metric.average_odds_difference())
 print("Theil Index:", classification_metric.theil_index())
 
-performance_dict = calculate_bias(y_pred, y_test, {'sex': test.protected_attributes[:, 1]},
+performance_dict = calculate_bias(y_pred, y_test, {'sex': test.protected_attributes[:, 0]},
                                   {'sex': lambda x: x == 1}, 0.5)
 
 print(performance_dict)

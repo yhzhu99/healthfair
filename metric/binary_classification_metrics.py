@@ -1,9 +1,9 @@
 import torch
-from torchmetrics import AUROC, Accuracy, AveragePrecision, Precision, Recall
-from torchmetrics.classification import BinaryF1Score, ConfusionMatrix
+from torchmetrics import AUROC, Accuracy, AveragePrecision
+from torchmetrics.classification import BinaryF1Score
 import numpy as np
 from sklearn import metrics as sklearn_metrics
-from es import es_score
+from metric.es import es_score
 
 
 def reverse_los(y, los_info):
